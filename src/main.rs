@@ -1,5 +1,12 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::PrimaryWindow};
 
+enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -9,7 +16,9 @@ fn main() {
 }
 
 #[derive(Component)]
-pub struct Snake {}
+pub struct Snake {
+    pub direction: Direction,
+}
 
 fn spawn_snake(
     mut commands: Commands,
@@ -34,36 +43,44 @@ fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Primar
             transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
             ..default()
         },
-        Snake {},
+        Snake {
+            direction: Direction::Up,
+        },
     ));
 }
 
-pub const PLAYER_SPEED: f32 = 100.0;
+pub const PLAYER_SPEED: f32 = 200.0;
 
 fn snake_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut snake_query: Query<&mut Transform, With<Snake>>,
+    mut snake_transform_query: Query<&mut Transform, With<Snake>>,
+    mut snake_query: Query<&mut Snake>,
     time: Res<Time>,
 ) {
-    if let Ok(mut transform) = snake_query.get_single_mut() {
-        let mut direction = Vec3::ZERO;
+    if let Ok(mut transform) = snake_transform_query.get_single_mut() {
+        let mut snake = snake_query
+            .get_single_mut()
+            .expect("Error: Could not find a single player.");
 
         if keyboard_input.pressed(KeyCode::Left) {
-            direction += Vec3::new(50.0, 0.0, 0.0)
+            snake.direction = Direction::Left;
         }
         if keyboard_input.pressed(KeyCode::Right) {
-            direction += Vec3::new(-50.0, 0.0, 0.0)
+            snake.direction = Direction::Right;
         }
         if keyboard_input.pressed(KeyCode::Up) {
-            direction += Vec3::new(0.0, -50.0, 0.0)
+            snake.direction = Direction::Up;
         }
         if keyboard_input.pressed(KeyCode::Down) {
-            direction += Vec3::new(0.0, 50.0, 0.0)
+            snake.direction = Direction::Down;
         }
 
-        if direction.length() > 0.0 {
-            direction = direction.normalize();
-        }
+        let direction = match snake.direction {
+            Direction::Left => Vec3::new(1.0, 0.0, 0.0),
+            Direction::Right => Vec3::new(-1.0, 0.0, 0.0),
+            Direction::Up => Vec3::new(0.0, -1.0, 0.0),
+            Direction::Down => Vec3::new(0.0, 1.0, 0.0),
+        };
 
         transform.translation += direction * PLAYER_SPEED * time.delta_seconds();
     }
