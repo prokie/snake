@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.12.1" }
+bevy = { version = "0.20.1" }
+rand = "0.10.3"
 
 
 # Enable a small amount of optimization in debug mode
