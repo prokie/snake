@@ -18,13 +18,15 @@ pub struct Food;
 
 fn check_food_eaten(
     mut commands: Commands,
-    head_query: Single<&GridPosition, (With<SnakeHead>, Changed<GridPosition>)>,
+    head_query: Single<(&GridPosition, &mut SnakeHead), Changed<GridPosition>>,
     food_query: Query<(Entity, &GridPosition), With<Food>>,
 ) {
-    let head_position = *head_query;
-    for (food_entity, food_position) in food_query {
-        if *food_position == *head_position {
+    let (head_pos, mut head) = head_query.into_inner();
+
+    for (food_entity, food_pos) in &food_query {
+        if *food_pos == *head_pos {
             commands.entity(food_entity).despawn();
+            head.pending_growth += 1;
         }
     }
 }

@@ -6,6 +6,7 @@ pub mod board;
 pub mod constants;
 pub mod food;
 pub mod snake;
+pub mod state;
 
 use board::BoardPlugin;
 use food::FoodPlugin;
