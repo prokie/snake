@@ -34,6 +34,7 @@ impl Plugin for SnakePlugin {
                 orient_snake_head,
             )
                 .chain()
+                .in_set(SnakeSystems)
                 .run_if(in_state(GameState::Playing)),
         )
         .add_observer(on_food_eaten_grow_snake);
