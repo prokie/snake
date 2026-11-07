@@ -20,10 +20,17 @@ impl Plugin for SnakePlugin {
             TimerMode::Repeating,
         )))
         .init_resource::<SnakeSegments>()
-        .add_systems(Startup, spawn_snake)
+        .add_systems(OnEnter(GameState::Playing), spawn_snake)
         .add_systems(
             Update,
-            (read_direction, tick_snake_movement, orient_snake_head).chain(),
+            (
+                read_direction,
+                tick_snake_movement,
+                check_self_collision,
+                orient_snake_head,
+            )
+                .chain()
+                .run_if(in_state(GameState::Playing)),
         );
     }
 }
@@ -92,7 +99,7 @@ fn spawn_snake(
 
     // Spawn Head (automatically despawned next time GameState::Playing is entered)
     commands.spawn((
-        DespawnOnEnter(GameState::Playing),
+        DespawnOnExit(GameState::Playing),
         Sprite {
             image: asset_server.load("head.png"),
             custom_size: Some(Vec2::splat(CELL_SIZE)),
@@ -115,7 +122,7 @@ fn spawn_snake(
 fn spawn_segment(commands: &mut Commands, pos: GridPosition) -> Entity {
     commands
         .spawn((
-            DespawnOnEnter(GameState::Playing),
+            DespawnOnExit(GameState::Playing),
             Sprite {
                 color: SEGMENT_COLOR,
                 custom_size: Some(Vec2::splat(SEGMENT_SIZE)),
@@ -205,4 +212,16 @@ fn orient_snake_head(
     };
     transform.rotation = Quat::from_rotation_z(angle);
     sprite.flip_x = matches!(head.direction, Direction::Left);
+}
+
+fn check_self_collision(
+    head_query: Single<&GridPosition, With<SnakeHead>>,
+    body_query: Query<&GridPosition, With<SnakeSegment>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    let head_pos = head_query.into_inner();
+
+    if body_query.iter().any(|body_pos| body_pos == head_pos) {
+        next_state.set(GameState::GameOver);
+    }
 }

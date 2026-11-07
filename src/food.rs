@@ -4,12 +4,18 @@ use rand::seq::IndexedRandom;
 use crate::board::GridPosition;
 use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH, CELL_SIZE};
 use crate::snake::SnakeHead;
+use crate::state::GameState;
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (check_food_eaten, spawn_food_if_missing).chain());
+        app.add_systems(
+            Update,
+            (check_food_eaten, spawn_food_if_missing)
+                .chain()
+                .run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
@@ -61,6 +67,7 @@ fn spawn_food_if_missing(
     let mut rng = rand::rng();
     if let Some(&spawn_pos) = free_cells.choose(&mut rng) {
         commands.spawn((
+            DespawnOnExit(GameState::Playing),
             Sprite {
                 // Swap color for `image: asset_server.load("apple.png"),` if you have a sprite
                 color: Color::srgb(0.9, 0.2, 0.2),

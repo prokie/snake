@@ -8,11 +8,11 @@ pub mod food;
 pub mod snake;
 pub mod state;
 
+use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH, CELL_SIZE};
 use board::BoardPlugin;
 use food::FoodPlugin;
 use snake::SnakePlugin;
-
-use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH, CELL_SIZE};
+use state::StatePlugin;
 
 fn main() {
     App::new()
@@ -35,7 +35,7 @@ fn main() {
                 }),
         )
         .add_systems(Startup, setup_camera)
-        .add_plugins((BoardPlugin, SnakePlugin, FoodPlugin))
+        .add_plugins((StatePlugin, BoardPlugin, SnakePlugin, FoodPlugin))
         .run();
 }
 
