@@ -5,12 +5,14 @@ use bevy::window::WindowResolution;
 pub mod board;
 pub mod constants;
 pub mod food;
+pub mod score;
 pub mod snake;
 pub mod state;
 
 use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH, CELL_SIZE};
 use board::BoardPlugin;
 use food::FoodPlugin;
+use score::ScorePlugin;
 use snake::SnakePlugin;
 use state::StatePlugin;
 
@@ -35,7 +37,13 @@ fn main() {
                 }),
         )
         .add_systems(Startup, setup_camera)
-        .add_plugins((StatePlugin, BoardPlugin, SnakePlugin, FoodPlugin))
+        .add_plugins((
+            StatePlugin,
+            BoardPlugin,
+            SnakePlugin,
+            FoodPlugin,
+            ScorePlugin,
+        ))
         .run();
 }
 

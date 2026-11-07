@@ -1,5 +1,6 @@
 use crate::board::GridPosition;
 use crate::constants::*;
+use crate::food::FoodEaten;
 use crate::state::GameState;
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -10,6 +11,9 @@ const INITIAL_TAIL_LENGTH: i32 = 2;
 
 const SEGMENT_SIZE: f32 = CELL_SIZE - 2.0;
 const SEGMENT_COLOR: Color = Color::srgb(0.25, 0.80, 0.35);
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SnakeSystems;
 
 pub struct SnakePlugin;
 
@@ -31,7 +35,8 @@ impl Plugin for SnakePlugin {
             )
                 .chain()
                 .run_if(in_state(GameState::Playing)),
-        );
+        )
+        .add_observer(on_food_eaten_grow_snake);
     }
 }
 
@@ -215,7 +220,7 @@ fn orient_snake_head(
 }
 
 fn check_self_collision(
-    head_query: Single<&GridPosition, With<SnakeHead>>,
+    head_query: Single<&GridPosition, (With<SnakeHead>, Changed<GridPosition>)>,
     body_query: Query<&GridPosition, With<SnakeSegment>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
@@ -224,4 +229,8 @@ fn check_self_collision(
     if body_query.iter().any(|body_pos| body_pos == head_pos) {
         next_state.set(GameState::GameOver);
     }
+}
+
+fn on_food_eaten_grow_snake(food_eaten: On<FoodEaten>, mut head: Single<&mut SnakeHead>) {
+    head.pending_growth += food_eaten.growth;
 }
