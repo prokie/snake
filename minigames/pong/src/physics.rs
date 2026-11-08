@@ -1,6 +1,7 @@
-use bevy::prelude::*;
-
 use crate::state::GameState;
+use bevy::prelude::*;
+use lightyear::prelude::{Interpolated, Predicted};
+use protocol::Position2D;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PhysicsSystems;
@@ -14,19 +15,20 @@ impl Plugin for PhysicsPlugin {
             apply_velocity
                 .in_set(PhysicsSystems)
                 .run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            PostUpdate,
+            sync_position_to_transform.run_if(in_state(GameState::Playing)),
         );
     }
 }
 
-/// Movement vector in world units per second.
-/// Automatically ensures the entity also has a Transform.
 #[derive(Component, Default, Clone, Copy, Debug, Deref, DerefMut)]
-#[require(Transform)]
+#[require(Position2D, Transform)]
 pub struct Velocity(pub Vec2);
 
-/// Axis-aligned 2D hitbox storing half-extents (width / 2.0, height / 2.0).
 #[derive(Component, Default, Clone, Copy, Debug)]
-#[require(Transform)]
+#[require(Position2D, Transform)]
 pub struct Collider {
     pub half_size: Vec2,
 }
@@ -38,9 +40,8 @@ impl Collider {
         }
     }
 
-    /// Builds a Bevy Aabb2d at the entity's current world position
-    pub fn aabb(&self, translation: Vec3) -> Aabb2d {
-        Aabb2d::new(translation.truncate(), self.half_size)
+    pub fn aabb(&self, pos: Vec2) -> Aabb2d {
+        Aabb2d::new(pos, self.half_size)
     }
 }
 
@@ -52,13 +53,10 @@ pub enum CollisionSide {
     Bottom,
 }
 
-/// Checks if `moving_aabb` intersects `target_aabb` and returns which side of `target_aabb` was hit
 pub fn check_aabb_collision(moving_aabb: Aabb2d, target_aabb: Aabb2d) -> Option<CollisionSide> {
     if !moving_aabb.intersects(&target_aabb) {
         return None;
     }
-
-    // Closest point on the target's box to the moving object's center
     let closest = target_aabb.closest_point(moving_aabb.center());
     let offset = moving_aabb.center() - closest;
 
@@ -75,10 +73,24 @@ pub fn check_aabb_collision(moving_aabb: Aabb2d, target_aabb: Aabb2d) -> Option<
     }
 }
 
-/// Moves every entity with a Velocity component each frame
-fn apply_velocity(time: Res<Time>, mut query: Query<(&Velocity, &mut Transform)>) {
+fn apply_velocity(time: Res<Time>, mut query: Query<(&Velocity, &mut Position2D)>) {
     let dt = time.delta_secs();
-    for (velocity, mut transform) in &mut query {
-        transform.translation += velocity.extend(0.0) * dt;
+    for (velocity, mut pos) in &mut query {
+        if velocity.0 != Vec2::ZERO {
+            pos.0 += velocity.0 * dt;
+        }
+    }
+}
+
+/// Copies networked/predicted/interpolated Position2D into Bevy's Transform for rendering
+fn sync_position_to_transform(
+    mut query: Query<
+        (&Position2D, &mut Transform),
+        Or<(With<Predicted>, With<Interpolated>, With<Collider>)>,
+    >,
+) {
+    for (pos, mut transform) in &mut query {
+        transform.translation.x = pos.x;
+        transform.translation.y = pos.y;
     }
 }
