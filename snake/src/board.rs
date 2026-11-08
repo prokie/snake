@@ -12,6 +12,7 @@ impl Plugin for BoardPlugin {
 }
 
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Deref, DerefMut)]
+#[component(summary_tick)]
 pub struct GridPosition(pub IVec2);
 
 impl GridPosition {
