@@ -1,11 +1,15 @@
 [workspace]
-members = ["snake", "pong"]
+members = ["protocol", "party_game", "minigames/pong", "minigames/snake"]
 resolver = "2"
 
 
 [workspace.dependencies]
 bevy = "0.20.1"
 rand = "0.10.3"
+lightyear = { version = "0.31.0", features = ["input_native"] }
+serde = { version = "1.0.229", features = ["derive"] }
+protocol = { path = "protocol" }
+pong = { path = "minigames/pong" }
 
 
 [profile.dev]

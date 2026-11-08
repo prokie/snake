@@ -1,10 +1,11 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, state::app::AppExtStates};
+use protocol::GameMode;
 
 pub struct StatePlugin;
 
 impl Plugin for StatePlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<GameState>()
+        app.add_sub_state::<GameState>()
             .add_systems(OnEnter(GameState::GameOver), spawn_game_over_ui)
             .add_systems(OnEnter(GameState::Paused), spawn_pause_ui)
             .add_systems(
@@ -18,7 +19,8 @@ impl Plugin for StatePlugin {
     }
 }
 
-#[derive(States, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(SubStates, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[source(GameMode = GameMode::Pong)]
 pub enum GameState {
     #[default]
     Playing,

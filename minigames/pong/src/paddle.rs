@@ -13,13 +13,13 @@ impl Plugin for PaddlePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), spawn_paddles)
             .add_systems(
-                Update,
+                FixedUpdate,
                 read_paddle_input
                     .before(PhysicsSystems)
                     .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
-                Update,
+                FixedUpdate,
                 clamp_paddles
                     .in_set(PaddleSystems)
                     .after(PhysicsSystems)

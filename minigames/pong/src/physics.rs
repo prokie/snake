@@ -10,7 +10,7 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            FixedUpdate,
             apply_velocity
                 .in_set(PhysicsSystems)
                 .run_if(in_state(GameState::Playing)),

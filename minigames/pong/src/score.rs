@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use protocol::GameMode;
 
 use crate::ball::PointScored;
 use crate::constants::WINNING_SCORE;
@@ -10,8 +11,11 @@ pub struct ScorePlugin;
 impl Plugin for ScorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Score>()
-            .add_systems(Startup, spawn_scoreboard)
-            .add_systems(OnEnter(GameState::Playing), reset_score)
+            .add_systems(OnEnter(GameMode::Pong), spawn_scoreboard)
+            .add_systems(
+                OnEnter(GameState::Playing),
+                reset_score.after(spawn_scoreboard),
+            )
             .add_observer(on_point_scored);
     }
 }
@@ -32,6 +36,7 @@ struct RightScoreText;
 /// Spawns a full-width top bar with Left and Right score texts using Bevy 0.20's bsn! syntax
 fn spawn_scoreboard(mut commands: Commands) {
     commands.spawn_scene(bsn! {
+        DespawnOnExit<GameMode>(GameMode::Pong)
         Node {
             position_type: PositionType::Absolute,
             top: Val::Px(24.0),

@@ -11,7 +11,7 @@ impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), spawn_ball)
             .add_systems(
-                Update,
+                FixedUpdate,
                 (bounce_off_walls, collide_with_paddles, check_goal_scored)
                     .chain()
                     .after(PaddleSystems)
